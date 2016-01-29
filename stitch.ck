@@ -1,17 +1,18 @@
-SndBuf x => dac;
+SndBuf x => Gain mute => dac;
 x => FFT fft => blackhole;
 dac => WvOut w => blackhole;
 0 => w.record;
-
+0 => mute.gain;
 "data/output.wav" => w.wavFilename;
 
-me.dir() + "data/colleen_babies.wav" => x.read;
+me.dir() + "data/grouper_dis.wav" => x.read;
+
+300 => int chunk_size;
 
 1024 => fft.size;
 Windowing.hamming(fft.size()) => fft.window;
 second/samp => float sr;
-2330 => int frames;
-//100 => int frames;
+(((x.samples()/sr)*1000)/chunk_size)$int=> int frames;
 
 (fft.size()/2) + 1 => int bins;
 <<<frames + " : " + bins>>>;
@@ -21,7 +22,7 @@ float X[frames][bins];
 0 => int counter;
 for(int frame; frame < frames; frame++){
   fft.upchuck() @=> UAnaBlob blob;
-  100::ms => now;
+  chunk_size::ms => now;
   for(int i; i < bins-1; i++){
     blob.fvals()[i] => X[frame][i];
   }
@@ -33,10 +34,11 @@ organize(X) @=> int new_order[];
 
 <<<"playback">>>;
 
+1 => mute.gain;
 1 => w.record;
 for(int i; i < new_order.size(); i++){
-  ((new_order[i] * (100 * 44.1))$int) => x.pos;
-  100::ms => now;
+  ((new_order[i] * (chunk_size * 44.1))$int) => x.pos;
+  chunk_size::ms => now;
 }
 0 => w.record;
 
@@ -48,12 +50,7 @@ fun int[] organize(float blobs[][]){
     1 => int free;
     for(int j; j < blobs.size(); j++){
       if(i != j){
-        for(int k; k < organized.size()-1; k++){
-          if(j == organized[k]){
-            0 => free;
-          }
-        }
-        if(free){
+        if(blobs[j].size() != 1){
           blobs[i] @=> float main[];
           blobs[j] @=> float sub[];
           compare(main, sub) => float comp;
@@ -61,13 +58,12 @@ fun int[] organize(float blobs[][]){
             comp => lowest;
             j => lowest_index;
           }
-        }else{
-          1 => free;
         }
       }
     }
     <<<organized.size() + " out of " + blobs.size() + " finished">>>;
     organized << lowest_index;
+    blobs[lowest_index].size(1);
   }
   return organized;
 }
