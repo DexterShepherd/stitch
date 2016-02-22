@@ -5,9 +5,9 @@ dac => WvOut w => blackhole;
 0 => mute.gain;
 "data/output.wav" => w.wavFilename;
 
-me.dir() + "data/grouper_dis.wav" => x.read;
+me.dir() + "data/sonic_youth_superstar.wav" => x.read;
 
-300 => int chunk_size;
+150 => int chunk_size;
 
 1024 => fft.size;
 Windowing.hamming(fft.size()) => fft.window;
