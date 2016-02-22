@@ -3,9 +3,9 @@ x => FFT fft => blackhole;
 dac => WvOut w => blackhole;
 0 => w.record;
 0 => mute.gain;
-"data/output.wav" => w.wavFilename;
+"data/post_foetus_processed.wav" => w.wavFilename;
 
-me.dir() + "data/sonic_youth_superstar.wav" => x.read;
+me.dir() + "data/out.wav" => x.read;
 
 150 => int chunk_size;
 
